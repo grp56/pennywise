@@ -1,0 +1,38 @@
+{
+  "name": "@pennywise/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "vitest run --passWithNoTests",
+    "db:migrate": "node --eval \"console.log('db:migrate will be implemented in Step 3')\"",
+    "db:seed": "node --eval \"console.log('db:seed will be implemented in Step 3')\"",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@pennywise/contracts": "workspace:*",
+    "bcrypt": "^5.1.1",
+    "connect-pg-simple": "^10.0.0",
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.39.0",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "pg": "^8.13.3",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/express": "^5.0.0",
+    "@types/express-session": "^1.18.1",
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.11.11",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.7"
+  }
+}
