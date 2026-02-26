@@ -208,4 +208,91 @@ describe.sequential("database persistence", () => {
     }
   });
 
+  it("calculates persisted summary values after create, update, and delete", async () => {
+    await seedTestDatabase();
+
+    const { pool, database, demoUser, categoryBySlug } = await getSeededContext();
+    const salaryCategory = categoryBySlug.get("salary");
+    const foodCategory = categoryBySlug.get("food");
+    const billsCategory = categoryBySlug.get("bills");
+
+    if (!salaryCategory || !foodCategory || !billsCategory) {
+      throw new Error("Expected seeded categories for summary tests to exist.");
+    }
+
+    try {
+      const [salaryTransaction] = await database
+        .insert(transactions)
+        .values([
+          {
+            userId: demoUser.id,
+            type: "income",
+            amountCents: 200_000,
+            currency: "HKD",
+            categoryId: salaryCategory.id,
+            transactionDate: "2026-03-20",
+            source: "manual",
+            remarks: "March salary",
+          },
+          {
+            userId: demoUser.id,
+            type: "expense",
+            amountCents: 45_500,
+            currency: "HKD",
+            categoryId: foodCategory.id,
+            transactionDate: "2026-03-20",
+            source: "manual",
+            remarks: "Groceries",
+          },
+          {
+            userId: demoUser.id,
+            type: "expense",
+            amountCents: 9_500,
+            currency: "HKD",
+            categoryId: billsCategory.id,
+            transactionDate: "2026-03-21",
+            source: "manual",
+            remarks: "Utilities",
+          },
+        ])
+        .returning({ id: transactions.id });
+
+      expect(await getPersistedSummary(database, demoUser.id)).toEqual({
+        totalIncomeCents: 200_000,
+        totalExpenseCents: 55_000,
+        balanceCents: 145_000,
+        currency: "HKD",
+      });
+
+      await database
+        .update(transactions)
+        .set({
+          amountCents: 15_000,
+          updatedAt: new Date(),
+        })
+        .where(eq(transactions.remarks, "Utilities"));
+
+      expect(await getPersistedSummary(database, demoUser.id)).toEqual({
+        totalIncomeCents: 200_000,
+        totalExpenseCents: 60_500,
+        balanceCents: 139_500,
+        currency: "HKD",
+      });
+
+      if (!salaryTransaction) {
+        throw new Error("Expected a returned transaction identifier.");
+      }
+
+      await database.delete(transactions).where(eq(transactions.remarks, "Groceries"));
+
+      expect(await getPersistedSummary(database, demoUser.id)).toEqual({
+        totalIncomeCents: 200_000,
+        totalExpenseCents: 15_000,
+        balanceCents: 185_000,
+        currency: "HKD",
+      });
+    } finally {
+      await pool.end();
+    }
+  });
 });
