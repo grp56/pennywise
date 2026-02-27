@@ -63,6 +63,9 @@ pnpm install
 pnpm db:up
 ```
 
+This starts the PostgreSQL container defined in `docker-compose.yml`.
+Make sure Docker is running before starting the database, and make sure host port `5432` is free.
+
 To stop the database:
 
 ```bash
@@ -99,22 +102,28 @@ pnpm db:migrate
 pnpm db:seed
 ```
 
-`pnpm db:migrate` and `pnpm db:seed` are currently placeholders and do not perform real database setup yet.
+`pnpm db:migrate` applies the committed SQL migrations to `DATABASE_URL`.
+`pnpm db:seed` creates or updates the demo user and the fixed system category set.
 
 ## Current Progress
 
 - The monorepo workspace is set up with `apps/web`, `apps/api`, and `packages/contracts`.
 - The shared contracts package is implemented and exports Zod schemas, TypeScript types, and pure validation helpers for auth, categories, transactions, summary data, and structured API errors.
+- The backend persistence layer is implemented with:
+  - Drizzle schema definitions for `users`, `categories`, `transactions`, and `session`
+  - committed SQL migrations
+  - repeatable seed logic for the demo user and fixed categories
+  - integration tests covering migration state, repeatable seeding, `external_ref` uniqueness, and persisted summary calculations
 - Unit tests exist for:
   - positive amount validation
   - remarks length limits
   - valid date-only parsing
   - category/type compatibility
   - summary calculation
-- The API workspace currently contains a placeholder bootstrap entrypoint only.
+- The API entrypoint is still a placeholder, but the database layer behind it now exists.
 - The web workspace currently contains a placeholder app shell only.
 - PostgreSQL connection settings and Docker Compose support are present for local development.
-- Database schema, migrations, seed logic, authenticated routes, transaction CRUD, summary endpoints, and real frontend screens are still pending.
+- Authenticated routes, transaction CRUD, summary endpoints, and real frontend screens are still pending.
 
 ## Verified Status
 
@@ -124,14 +133,14 @@ The following checks are known to pass in the current repository state:
 - TypeScript typecheck for `packages/contracts`
 - TypeScript typecheck for `apps/api`
 - TypeScript typecheck for `apps/web`
+- `apps/api` integration tests for migrations, seeds, and persisted summary behavior
 
 ## Notes That Still Need Documentation
 
-- Real database migration and seed workflow once the persistence layer is implemented
 - Demo account login flow and session behavior once authentication is implemented
 - API endpoint reference after backend routes exist
 - Frontend route map and screen behavior after the app shell is replaced with real pages
-- Local development troubleshooting guidance for PostgreSQL, ports, and environment variables
+- Local development troubleshooting guidance for PostgreSQL connectivity, Docker startup, port `5432` conflicts, and environment variables
 - Deployment instructions for Render and Neon after production setup exists
 - Integration, component, and end-to-end testing workflow after those suites are added
 - Optional mock transaction import behavior only if that feature is implemented
@@ -140,5 +149,4 @@ The following checks are known to pass in the current repository state:
 
 - No production-ready backend routes are implemented yet.
 - No real frontend user flows are implemented yet.
-- No database migrations or seed scripts are implemented yet.
 - No deployment configuration is documented yet.
