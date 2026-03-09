@@ -1,13 +1,23 @@
+import { Navigate, Route, Routes } from "react-router-dom";
+
+import { AppLayout } from "./components/AppLayout";
+import { DashboardPage } from "./pages/DashboardPage";
+import { LoginPage } from "./pages/LoginPage";
+import { TransactionFormPage } from "./pages/TransactionFormPage";
+import { TransactionsPage } from "./pages/TransactionsPage";
+
 export function App() {
   return (
-    <main className="app-shell">
-      <section className="card">
-        <p className="eyebrow">Step 1 Bootstrap</p>
-        <h1>Personal Finance Tracking App</h1>
-        <p>
-          The monorepo workspace is ready for contracts, the Express API, and the React app.
-        </p>
-      </section>
-    </main>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route element={<AppLayout />}>
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/transactions" element={<TransactionsPage />} />
+        <Route path="/transactions/new" element={<TransactionFormPage mode="create" />} />
+        <Route path="/transactions/:transactionId/edit" element={<TransactionFormPage mode="edit" />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   );
 }
