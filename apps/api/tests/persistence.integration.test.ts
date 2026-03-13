@@ -8,60 +8,15 @@ import { createDatabase, createPool, getRequiredConnectionString } from "../src/
 import { migrateDatabase } from "../src/db/migrate.js";
 import { categories, transactions, users } from "../src/db/schema.js";
 import { seedCategories } from "../src/db/seed-data.js";
-import { seedDatabase } from "../src/db/seed.js";
 import { getPersistedSummary } from "../src/db/summary.js";
-
-const testDatabaseUrl = getRequiredConnectionString(
-  process.env.TEST_DATABASE_URL,
-  "TEST_DATABASE_URL",
-);
-const demoUsername = process.env.DEMO_USERNAME ?? "demo";
-const demoPassword = process.env.DEMO_PASSWORD ?? "demo-password";
-
-async function resetTestDatabase(connectionString: string): Promise<void> {
-  const pool = createPool(connectionString);
-
-  try {
-    await pool.query("drop schema if exists public cascade");
-    await pool.query("create schema public");
-    await pool.query("grant all on schema public to public");
-  } finally {
-    await pool.end();
-  }
-}
-
-async function seedTestDatabase(): Promise<void> {
-  await seedDatabase({
-    connectionString: testDatabaseUrl,
-    demoUsername,
-    demoPassword,
-  });
-}
-
-async function getSeededContext() {
-  const pool = createPool(testDatabaseUrl);
-  const database = createDatabase(pool);
-
-  const [demoUser] = await database
-    .select()
-    .from(users)
-    .where(eq(users.username, demoUsername))
-    .limit(1);
-
-  const categoryRows = await database.select().from(categories);
-  const categoryBySlug = new Map(categoryRows.map((category) => [category.slug, category]));
-
-  if (!demoUser) {
-    throw new Error("Expected seeded demo user to exist.");
-  }
-
-  return {
-    pool,
-    database,
-    demoUser,
-    categoryBySlug,
-  };
-}
+import {
+  demoPassword,
+  demoUsername,
+  getSeededContext,
+  resetTestDatabase,
+  seedTestDatabase,
+  testDatabaseUrl,
+} from "./test-database.js";
 
 describe.sequential("database persistence", () => {
   beforeEach(async () => {
