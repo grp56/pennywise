@@ -16,5 +16,5 @@ createRoot(container).render(
     <BrowserRouter>
       <App />
     </BrowserRouter>
-  </StrictMode>
+  </StrictMode>,
 );
