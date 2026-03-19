@@ -2,15 +2,19 @@ import type {
   CategoriesResponse,
   CreateTransactionInput,
   Transaction,
+  TransactionListQuery,
+  TransactionListResponse,
   UpdateTransactionInput,
 } from "@pennywise/contracts";
 import {
   categoriesResponseSchema,
   createTransactionInputSchema,
+  transactionListQuerySchema,
+  transactionListResponseSchema,
   transactionSchema,
   updateTransactionInputSchema,
 } from "@pennywise/contracts";
-import { and, eq, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { type Response, Router } from "express";
 import { z } from "zod";
 
@@ -24,6 +28,16 @@ const transactionIdParamsSchema = z
     id: z.string().uuid("Transaction ID must be a valid UUID"),
   })
   .strict();
+
+const transactionQuerySchema = transactionListQuerySchema.superRefine((value, context) => {
+  if (value.from && value.to && value.from > value.to) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "From date must be on or before to date",
+      path: ["from"],
+    });
+  }
+});
 
 type CategoryRecord = Pick<typeof categories.$inferSelect, "id" | "slug" | "name" | "type">;
 
@@ -44,6 +58,11 @@ type TransactionRecord = Pick<
 > & {
   categoryName: string;
   categorySlug: string;
+};
+
+type ParsedTransactionListQuery = Omit<TransactionListQuery, "page" | "pageSize"> & {
+  page: number;
+  pageSize: number;
 };
 
 function getAuthenticatedUserId(response: Response): string {
@@ -74,6 +93,20 @@ function parseUpdateTransactionInput(body: unknown): UpdateTransactionInput {
   }
 
   return parsed.data;
+}
+
+function parseTransactionListQuery(query: unknown): ParsedTransactionListQuery {
+  const parsed = transactionQuerySchema.safeParse(query);
+
+  if (!parsed.success) {
+    throw createValidationError(parsed.error);
+  }
+
+  return {
+    ...parsed.data,
+    page: parsed.data.page ?? 1,
+    pageSize: parsed.data.pageSize ?? 20,
+  };
 }
 
 function parseTransactionId(params: unknown): string {
@@ -251,6 +284,55 @@ export function createBusinessRouter(database: ApiDatabase): Router {
         categoryName: category.name,
       }),
     );
+  });
+
+  router.get("/transactions", async (request, response) => {
+    const userId = getAuthenticatedUserId(response);
+    const query = parseTransactionListQuery(request.query);
+    const page = query.page;
+    const pageSize = query.pageSize;
+    let whereClause = eq(transactions.userId, userId);
+
+    if (query.type) {
+      whereClause = and(whereClause, eq(transactions.type, query.type)) ?? whereClause;
+    }
+
+    if (query.categoryId) {
+      whereClause = and(whereClause, eq(transactions.categoryId, query.categoryId)) ?? whereClause;
+    }
+
+    if (query.from) {
+      whereClause = and(whereClause, gte(transactions.transactionDate, query.from)) ?? whereClause;
+    }
+
+    if (query.to) {
+      whereClause = and(whereClause, lte(transactions.transactionDate, query.to)) ?? whereClause;
+    }
+
+    const [countResult] = await database
+      .select({ value: count() })
+      .from(transactions)
+      .where(whereClause);
+
+    const totalItems = countResult?.value ?? 0;
+    const transactionRecords = await database
+      .select(getTransactionSelection())
+      .from(transactions)
+      .innerJoin(categories, eq(transactions.categoryId, categories.id))
+      .where(whereClause)
+      .orderBy(desc(transactions.transactionDate), desc(transactions.createdAt))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize);
+
+    const payload: TransactionListResponse = transactionListResponseSchema.parse({
+      items: transactionRecords.map(mapTransaction),
+      page,
+      pageSize,
+      totalItems,
+      totalPages: totalItems === 0 ? 0 : Math.ceil(totalItems / pageSize),
+    });
+
+    response.status(200).json(payload);
   });
 
   router.get("/transactions/:id", async (request, response) => {
