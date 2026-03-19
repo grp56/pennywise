@@ -1,6 +1,7 @@
 import type {
   CategoriesResponse,
   CreateTransactionInput,
+  SummaryResponse,
   Transaction,
   TransactionListQuery,
   TransactionListResponse,
@@ -9,6 +10,8 @@ import type {
 import {
   categoriesResponseSchema,
   createTransactionInputSchema,
+  isCategoryTypeCompatible,
+  summaryResponseSchema,
   transactionListQuerySchema,
   transactionListResponseSchema,
   transactionSchema,
@@ -21,7 +24,13 @@ import { z } from "zod";
 import { requireAuthenticatedUser } from "./auth.js";
 import type { ApiDatabase } from "./db/client.js";
 import { categories, transactions } from "./db/schema.js";
-import { ApiHttpError, createConflictError, createNotFoundError, createValidationError } from "./errors.js";
+import { getPersistedSummary } from "./db/summary.js";
+import {
+  ApiHttpError,
+  createConflictError,
+  createNotFoundError,
+  createValidationError,
+} from "./errors.js";
 
 const transactionIdParamsSchema = z
   .object({
@@ -165,7 +174,10 @@ async function getCategoryRecord(
   return category;
 }
 
-async function requireCategoryRecord(database: ApiDatabase, categoryId: string): Promise<CategoryRecord> {
+async function requireCategoryRecord(
+  database: ApiDatabase,
+  categoryId: string,
+): Promise<CategoryRecord> {
   const category = await getCategoryRecord(database, categoryId);
 
   if (!category) {
@@ -175,8 +187,11 @@ async function requireCategoryRecord(database: ApiDatabase, categoryId: string):
   return category;
 }
 
-function assertCategoryCompatible(category: CategoryRecord, transactionType: Transaction["type"]): void {
-  if (category.type !== transactionType) {
+function assertCategoryCompatible(
+  category: CategoryRecord,
+  transactionType: Transaction["type"],
+): void {
+  if (!isCategoryTypeCompatible(category.type, transactionType)) {
     throw createConflictError("Transaction type does not match category type");
   }
 }
@@ -407,6 +422,15 @@ export function createBusinessRouter(database: ApiDatabase): Router {
     }
 
     response.status(204).send();
+  });
+
+  router.get("/summary", async (_request, response) => {
+    const userId = getAuthenticatedUserId(response);
+    const payload: SummaryResponse = summaryResponseSchema.parse(
+      await getPersistedSummary(database, userId),
+    );
+
+    response.status(200).json(payload);
   });
 
   return router;
