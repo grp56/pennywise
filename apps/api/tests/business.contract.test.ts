@@ -3,10 +3,15 @@ import "dotenv/config";
 import { randomUUID } from "node:crypto";
 import type { Server } from "node:http";
 
-import type { CategoriesResponse, Transaction } from "@pennywise/contracts";
+import type {
+  CategoriesResponse,
+  Transaction,
+  TransactionListResponse,
+} from "@pennywise/contracts";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { createApp } from "../src/app.js";
+import { transactions } from "../src/db/schema.js";
 import { loginAsDemo, requestJson, startServer, stopServer } from "./http-test.js";
 import {
   getSeededContext,
@@ -30,6 +35,51 @@ const orderedCategorySlugs = [
   "shopping",
   "transport",
 ];
+
+interface SeedTransactionInput {
+  amountCents: number;
+  categorySlug: string;
+  createdAt?: Date;
+  remarks?: string | null;
+  transactionDate: string;
+  type: "income" | "expense";
+  updatedAt?: Date;
+}
+
+async function seedDemoTransactions(records: SeedTransactionInput[]) {
+  const { pool, database, demoUser, categoryBySlug } = await getSeededContext();
+
+  try {
+    return await database
+      .insert(transactions)
+      .values(
+        records.map((record) => {
+          const category = categoryBySlug.get(record.categorySlug);
+
+          if (!category) {
+            throw new Error(`Expected seeded category '${record.categorySlug}' to exist.`);
+          }
+
+          return {
+            userId: demoUser.id,
+            type: record.type,
+            amountCents: record.amountCents,
+            currency: "HKD",
+            categoryId: category.id,
+            transactionDate: record.transactionDate,
+            remarks: record.remarks ?? null,
+            source: "manual" as const,
+            externalRef: null,
+            createdAt: record.createdAt,
+            updatedAt: record.updatedAt ?? record.createdAt,
+          };
+        }),
+      )
+      .returning({ id: transactions.id });
+  } finally {
+    await pool.end();
+  }
+}
 
 async function getCategoryIdBySlug(slug: string): Promise<string> {
   const { pool, categoryBySlug } = await getSeededContext();
@@ -81,11 +131,13 @@ describe.sequential("business contract", () => {
     }
   });
 
-  it("rejects unauthenticated access to categories and transaction CRUD routes", async () => {
+  it("rejects unauthenticated access to business routes that exist so far", async () => {
     const expenseCategoryId = await getCategoryIdBySlug("food");
     const transactionId = randomUUID();
     const requests = [
       requestJson(baseUrl, "/api/categories"),
+      requestJson(baseUrl, "/api/transactions"),
+      requestJson(baseUrl, `/api/transactions/${transactionId}`),
       requestJson(baseUrl, "/api/transactions", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -96,7 +148,6 @@ describe.sequential("business contract", () => {
           transactionDate: "2026-03-20",
         }),
       }),
-      requestJson(baseUrl, `/api/transactions/${transactionId}`),
       requestJson(baseUrl, `/api/transactions/${transactionId}`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
@@ -150,27 +201,17 @@ describe.sequential("business contract", () => {
       }),
     });
 
+    const transactionId = createResponse.body?.id ?? "";
     expect(createResponse.status).toBe(201);
-    expect(createResponse.body).toMatchObject({
-      type: "expense",
-      amountCents: 5500,
-      categorySlug: "food",
-    });
 
-    const transactionId = createResponse.body?.id;
-    expect(transactionId).toBeTruthy();
+    expect(
+      await requestJson<Transaction>(baseUrl, `/api/transactions/${transactionId}`, {
+        headers: { cookie: sessionCookie },
+      }),
+    ).toMatchObject({ status: 200 });
 
-    const readResponse = await requestJson<Transaction>(
-      baseUrl,
-      `/api/transactions/${transactionId}`,
-      { headers: { cookie: sessionCookie } },
-    );
-    expect(readResponse.status).toBe(200);
-
-    const updateResponse = await requestJson<Transaction>(
-      baseUrl,
-      `/api/transactions/${transactionId}`,
-      {
+    expect(
+      await requestJson<Transaction>(baseUrl, `/api/transactions/${transactionId}`, {
         method: "PUT",
         headers: {
           "content-type": "application/json",
@@ -183,88 +224,100 @@ describe.sequential("business contract", () => {
           transactionDate: "2026-03-21",
           remarks: "Bus fare",
         }),
-      },
-    );
-    expect(updateResponse.status).toBe(200);
-    expect(updateResponse.body).toMatchObject({
-      amountCents: 3200,
-      categorySlug: "transport",
-    });
+      }),
+    ).toMatchObject({ status: 200 });
 
-    const deleteResponse = await requestJson<null>(baseUrl, `/api/transactions/${transactionId}`, {
-      method: "DELETE",
-      headers: {
-        cookie: sessionCookie,
-      },
-    });
-    expect(deleteResponse.status).toBe(204);
+    expect(
+      await requestJson<null>(baseUrl, `/api/transactions/${transactionId}`, {
+        method: "DELETE",
+        headers: { cookie: sessionCookie },
+      }),
+    ).toMatchObject({ status: 204 });
   });
 
-  it("rejects invalid, missing, and mismatched transaction inputs", async () => {
-    const expenseCategoryId = await getCategoryIdBySlug("food");
-    const invalidResponse = await requestJson<{
-      code: string;
-      details?: { fieldErrors?: Record<string, string[]> };
-      message: string;
-    }>(baseUrl, "/api/transactions", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        cookie: sessionCookie,
+  it("lists transactions with ordering, filters, pagination, and empty states", async () => {
+    const shoppingCategoryId = await getCategoryIdBySlug("shopping");
+    const seededTransactions = await seedDemoTransactions([
+      {
+        type: "income",
+        amountCents: 200_000,
+        categorySlug: "salary",
+        transactionDate: "2026-03-21",
+        remarks: "March salary",
+        createdAt: new Date("2026-03-21T09:00:00.000Z"),
       },
-      body: JSON.stringify({
+      {
         type: "expense",
-        amountCents: 0,
-        categoryId: expenseCategoryId,
+        amountCents: 5500,
+        categorySlug: "food",
         transactionDate: "2026-03-20",
-      }),
-    });
-
-    expect(invalidResponse.status).toBe(400);
-    expect(invalidResponse.body?.details?.fieldErrors?.amountCents).toEqual([
-      "Amount must be greater than zero",
+        remarks: "Lunch",
+        createdAt: new Date("2026-03-20T12:00:00.000Z"),
+      },
+      {
+        type: "expense",
+        amountCents: 3200,
+        categorySlug: "transport",
+        transactionDate: "2026-03-20",
+        remarks: "Bus fare",
+        createdAt: new Date("2026-03-20T08:00:00.000Z"),
+      },
+      {
+        type: "income",
+        amountCents: 8000,
+        categorySlug: "gift",
+        transactionDate: "2026-03-19",
+        remarks: "Birthday gift",
+        createdAt: new Date("2026-03-19T11:00:00.000Z"),
+      },
     ]);
 
-    const missingCategoryResponse = await requestJson<{ code: string; message: string }>(
+    const pagedResponse = await requestJson<TransactionListResponse>(
       baseUrl,
-      "/api/transactions",
+      "/api/transactions?page=1&pageSize=2",
       {
-        method: "POST",
         headers: {
-          "content-type": "application/json",
           cookie: sessionCookie,
         },
-        body: JSON.stringify({
-          type: "expense",
-          amountCents: 5500,
-          categoryId: randomUUID(),
-          transactionDate: "2026-03-20",
-        }),
       },
     );
-    expect(missingCategoryResponse.status).toBe(404);
 
-    const mismatchResponse = await requestJson<{ code: string; message: string }>(
+    expect(pagedResponse.status).toBe(200);
+    expect(pagedResponse.body).toMatchObject({
+      page: 1,
+      pageSize: 2,
+      totalItems: 4,
+      totalPages: 2,
+    });
+    expect(pagedResponse.body?.items.map((item) => item.id)).toEqual([
+      seededTransactions[0]?.id,
+      seededTransactions[1]?.id,
+    ]);
+
+    const filteredResponse = await requestJson<TransactionListResponse>(
       baseUrl,
-      "/api/transactions",
+      `/api/transactions?type=expense&categoryId=${shoppingCategoryId}`,
       {
-        method: "POST",
         headers: {
-          "content-type": "application/json",
           cookie: sessionCookie,
         },
-        body: JSON.stringify({
-          type: "income",
-          amountCents: 5500,
-          categoryId: expenseCategoryId,
-          transactionDate: "2026-03-20",
-        }),
       },
     );
-    expect(mismatchResponse.status).toBe(409);
-    expect(mismatchResponse.body).toEqual({
-      code: "CONFLICT",
-      message: "Transaction type does not match category type",
+    expect(filteredResponse.status).toBe(200);
+    expect(filteredResponse.body?.items).toEqual([]);
+
+    const invalidRangeResponse = await requestJson<{ code: string; message: string }>(
+      baseUrl,
+      "/api/transactions?from=2026-03-22&to=2026-03-20",
+      {
+        headers: {
+          cookie: sessionCookie,
+        },
+      },
+    );
+    expect(invalidRangeResponse.status).toBe(400);
+    expect(invalidRangeResponse.body).toMatchObject({
+      code: "VALIDATION_ERROR",
     });
   });
 });
