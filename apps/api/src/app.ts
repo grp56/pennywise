@@ -3,6 +3,7 @@ import express, { type ErrorRequestHandler } from "express";
 import session from "express-session";
 
 import { createAuthRouter } from "./auth.js";
+import { createBusinessRouter } from "./business.js";
 import type { ApiConfig } from "./config.js";
 import { type ApiDatabase, createDatabase, createPool } from "./db/client.js";
 import { ApiHttpError, createInternalError } from "./errors.js";
@@ -44,6 +45,7 @@ export function createApp(config: ApiConfig): ApiAppRuntime {
   );
 
   app.use("/api", createAuthRouter(database, secureCookies));
+  app.use("/api", createBusinessRouter(database));
 
   const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
     if (error instanceof SyntaxError && "status" in error && error.status === 400) {
