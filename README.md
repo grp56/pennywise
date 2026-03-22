@@ -114,32 +114,47 @@ pnpm db:seed
   - committed SQL migrations
   - repeatable seed logic for the demo user and fixed categories
   - integration tests covering migration state, repeatable seeding, `external_ref` uniqueness, and persisted summary calculations
+- The Express API is implemented with:
+  - configuration loading
+  - PostgreSQL-backed session middleware
+  - auth routes for login, logout, and session bootstrap
+  - protected business routes for categories, transaction CRUD, and summary
+  - centralized structured error handling
+- API route-level contract tests exist for:
+  - auth success and failure cases
+  - authenticated category retrieval
+  - transaction create, list, read, update, and delete behavior
+  - validation, not-found, conflict, and summary recalculation paths
 - Unit tests exist for:
   - positive amount validation
   - remarks length limits
   - valid date-only parsing
   - category/type compatibility
   - summary calculation
-- The API entrypoint is still a placeholder, but the database layer behind it now exists.
-- The web workspace currently contains a placeholder app shell only.
+- The React frontend is implemented with:
+  - React Router route handling for `/login`, `/dashboard`, `/transactions`, `/transactions/new`, and `/transactions/:transactionId/edit`
+  - auth bootstrap and protected-route redirects
+  - a typed API client that consumes the shared contracts package
+  - dashboard, transaction history, and shared create/edit transaction flows
 - PostgreSQL connection settings and Docker Compose support are present for local development.
-- Authenticated routes, transaction CRUD, summary endpoints, and real frontend screens are still pending.
+- The Vite dev server proxies `/api` requests to the Express server for local same-origin cookie-based development.
 
 ## Verified Status
 
 The following checks are known to pass in the current repository state:
 
-- `packages/contracts` unit tests
-- TypeScript typecheck for `packages/contracts`
 - TypeScript typecheck for `apps/api`
 - TypeScript typecheck for `apps/web`
-- `apps/api` integration tests for migrations, seeds, and persisted summary behavior
+- Vite production build for `apps/web`
+- Biome checks for the current `apps/api` and `apps/web` sources
+
+The repository also contains backend contract and integration test suites, but DB-backed execution still depends on a reachable PostgreSQL test database.
 
 ## Notes That Still Need Documentation
 
-- Demo account login flow and session behavior once authentication is implemented
-- API endpoint reference after backend routes exist
-- Frontend route map and screen behavior after the app shell is replaced with real pages
+- Demo credentials and local login walkthrough
+- API endpoint reference and example request/response payloads
+- Frontend screen walkthroughs for dashboard, history filters, and create/edit flows
 - Local development troubleshooting guidance for PostgreSQL connectivity, Docker startup, port `5432` conflicts, and environment variables
 - Deployment instructions for Render and Neon after production setup exists
 - Integration, component, and end-to-end testing workflow after those suites are added
@@ -147,6 +162,7 @@ The following checks are known to pass in the current repository state:
 
 ## Current Limitations
 
-- No production-ready backend routes are implemented yet.
-- No real frontend user flows are implemented yet.
+- Frontend component tests and Playwright end-to-end flows are not implemented yet.
+- The backend does not yet serve the compiled frontend assets from the same deployable service.
 - No deployment configuration is documented yet.
+- Optional mock transaction import is not implemented.
