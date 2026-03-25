@@ -11,7 +11,8 @@
     "typecheck": "pnpm -r --if-present run typecheck",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "test": "pnpm -r --if-present run test",
+    "test": "pnpm -r --if-present run test && pnpm run test:e2e",
+    "test:e2e": "playwright test ./apps/web/e2e --pass-with-no-tests",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f postgres",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@playwright/test": "^1.54.2",
     "typescript": "^5.8.2"
   }
 }
