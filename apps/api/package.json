@@ -10,6 +10,7 @@
     "lint": "biome check .",
     "format": "biome check --write .",
     "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest --watch --passWithNoTests",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
@@ -17,7 +18,7 @@
   },
   "dependencies": {
     "@pennywise/contracts": "workspace:*",
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
     "connect-pg-simple": "^10.0.0",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.39.0",
@@ -27,7 +28,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@types/bcrypt": "^5.0.2",
+    "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.0",
     "@types/express-session": "^1.18.1",
     "@types/node": "^24.0.0",

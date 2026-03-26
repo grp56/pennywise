@@ -1,6 +1,6 @@
 import type { AuthSession, AuthUser, LoginRequest } from "@pennywise/contracts";
 import { authSessionSchema, loginRequestSchema } from "@pennywise/contracts";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { type Request, type RequestHandler, Router } from "express";
 

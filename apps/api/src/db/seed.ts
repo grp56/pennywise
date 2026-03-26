@@ -1,8 +1,8 @@
-import "dotenv/config";
+import "../env.js";
 
 import { fileURLToPath } from "node:url";
 
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
