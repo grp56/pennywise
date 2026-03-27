@@ -5,8 +5,13 @@ coverage
 .env.local
 .DS_Store
 pnpm-debug.log*
-SPEC.md
-STEP.md
+.agents/
+.codex/
+.codex
+.specify/
+AGENTS.md
 milestone.md
 scope.md
+team.md
 *_page/
+specs/

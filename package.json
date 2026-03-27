@@ -1,7 +1,7 @@
 {
   "name": "pennywise",
   "private": true,
-  "packageManager": "pnpm@10.6.0",
+  "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": "24.x"
   },
@@ -13,6 +13,9 @@
     "format": "biome check --write .",
     "test": "pnpm -r --if-present run test && pnpm run test:e2e",
     "test:e2e": "playwright test ./apps/web/e2e --pass-with-no-tests",
+    "smoke:prod": "pnpm run smoke:prod:build && pnpm run smoke:prod:start",
+    "smoke:prod:build": "pnpm build",
+    "smoke:prod:start": "pnpm --filter @pennywise/api start",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f postgres",
