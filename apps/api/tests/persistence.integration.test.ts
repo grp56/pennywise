@@ -1,6 +1,6 @@
-import "dotenv/config";
+import "../src/env.js";
 
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { count, eq, sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 

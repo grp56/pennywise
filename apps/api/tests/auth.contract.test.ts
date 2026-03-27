@@ -1,12 +1,11 @@
-import "dotenv/config";
+import "../src/env.js";
 
-import { once } from "node:events";
-import { type Server, createServer } from "node:http";
+import type { Server } from "node:http";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { createApp } from "../src/app.js";
-import type { ApiConfig } from "../src/config.js";
+import type { createApp } from "../src/app.js";
+import { requestJson, startServer, stopServer } from "./http-test.js";
 import {
   demoPassword,
   demoUsername,
@@ -14,60 +13,6 @@ import {
   testDatabaseUrl,
   testSessionSecret,
 } from "./test-database.js";
-
-interface JsonResponse<T> {
-  body: T | null;
-  headers: Headers;
-  status: number;
-}
-
-async function startServer(config: ApiConfig) {
-  const runtime = createApp(config);
-  const server = createServer(runtime.app);
-
-  server.listen(0, "127.0.0.1");
-  await once(server, "listening");
-
-  const address = server.address();
-
-  if (!address || typeof address === "string") {
-    throw new Error("Expected test server to bind to a TCP port.");
-  }
-
-  return {
-    baseUrl: `http://127.0.0.1:${address.port}`,
-    server,
-    runtime,
-  };
-}
-
-async function stopServer(server: Server): Promise<void> {
-  await new Promise<void>((resolve, reject) => {
-    server.close((error) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-
-      resolve();
-    });
-  });
-}
-
-async function requestJson<T>(
-  baseUrl: string,
-  path: string,
-  init?: RequestInit,
-): Promise<JsonResponse<T>> {
-  const response = await fetch(`${baseUrl}${path}`, init);
-  const text = await response.text();
-
-  return {
-    status: response.status,
-    headers: response.headers,
-    body: text === "" ? null : (JSON.parse(text) as T),
-  };
-}
 
 describe.sequential("auth contract", () => {
   let runtime: ReturnType<typeof createApp> | undefined;
