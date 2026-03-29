@@ -1,6 +1,7 @@
 import "../src/env.js";
 
 import { eq } from "drizzle-orm";
+import type { ApiConfig } from "../src/config.js";
 
 import { createDatabase, createPool, getRequiredConnectionString } from "../src/db/client.js";
 import { migrateDatabase } from "../src/db/migrate.js";
@@ -15,7 +16,40 @@ export const demoUsername = process.env.DEMO_USERNAME ?? "demo";
 export const demoPassword = process.env.DEMO_PASSWORD ?? "demo-password";
 export const testSessionSecret = process.env.SESSION_SECRET ?? "test-session-secret";
 
+export function createTestApiConfig(overrides: Partial<ApiConfig> = {}): ApiConfig {
+  return {
+    connectionString: testDatabaseUrl,
+    nodeEnv: "test",
+    port: 0,
+    sessionSecret: testSessionSecret,
+    ...overrides,
+  };
+}
+
+export async function ensureTestDatabaseAvailable(
+  connectionString = testDatabaseUrl,
+): Promise<void> {
+  const pool = createPool(connectionString);
+
+  try {
+    await pool.query("select 1");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+
+    throw new Error(
+      `Unable to connect to TEST_DATABASE_URL (${connectionString}). Start the local test database and verify the connection string before running DB-backed tests. Original error: ${message}`,
+      {
+        cause: error,
+      },
+    );
+  } finally {
+    await pool.end();
+  }
+}
+
 export async function resetTestDatabase(connectionString = testDatabaseUrl): Promise<void> {
+  await ensureTestDatabaseAvailable(connectionString);
+
   const pool = createPool(connectionString);
 
   try {
