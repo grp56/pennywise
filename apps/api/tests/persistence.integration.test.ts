@@ -2,7 +2,7 @@ import "../src/env.js";
 
 import bcrypt from "bcryptjs";
 import { count, eq, sql } from "drizzle-orm";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createDatabase, createPool, getRequiredConnectionString } from "../src/db/client.js";
 import { migrateDatabase } from "../src/db/migrate.js";
@@ -12,6 +12,7 @@ import { getPersistedSummary } from "../src/db/summary.js";
 import {
   demoPassword,
   demoUsername,
+  ensureTestDatabaseAvailable,
   getSeededContext,
   resetTestDatabase,
   seedTestDatabase,
@@ -19,6 +20,10 @@ import {
 } from "./test-database.js";
 
 describe.sequential("database persistence", () => {
+  beforeAll(async () => {
+    await ensureTestDatabaseAvailable(testDatabaseUrl);
+  });
+
   beforeEach(async () => {
     await resetTestDatabase(testDatabaseUrl);
     await migrateDatabase(testDatabaseUrl);

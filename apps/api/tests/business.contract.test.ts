@@ -9,16 +9,16 @@ import type {
   Transaction,
   TransactionListResponse,
 } from "@pennywise/contracts";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { createApp } from "../src/app.js";
 import { transactions } from "../src/db/schema.js";
 import { loginAsDemo, requestJson, startServer, stopServer } from "./http-test.js";
 import {
+  createTestApiConfig,
+  ensureTestDatabaseAvailable,
   getSeededContext,
   prepareSeededTestDatabase,
-  testDatabaseUrl,
-  testSessionSecret,
 } from "./test-database.js";
 
 interface SeedTransactionInput {
@@ -109,15 +109,13 @@ describe.sequential("business contract", () => {
   let baseUrl = "";
   let sessionCookie = "";
 
+  beforeAll(async () => {
+    await ensureTestDatabaseAvailable();
+  });
+
   beforeEach(async () => {
     await prepareSeededTestDatabase();
-
-    const startedServer = await startServer({
-      connectionString: testDatabaseUrl,
-      nodeEnv: "test",
-      port: 0,
-      sessionSecret: testSessionSecret,
-    });
+    const startedServer = await startServer(createTestApiConfig());
 
     runtime = startedServer.runtime;
     server = startedServer.server;

@@ -2,16 +2,16 @@ import "../src/env.js";
 
 import type { Server } from "node:http";
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { createApp } from "../src/app.js";
 import { requestJson, startServer, stopServer } from "./http-test.js";
 import {
+  createTestApiConfig,
   demoPassword,
   demoUsername,
+  ensureTestDatabaseAvailable,
   prepareSeededTestDatabase,
-  testDatabaseUrl,
-  testSessionSecret,
 } from "./test-database.js";
 
 describe.sequential("auth contract", () => {
@@ -19,15 +19,13 @@ describe.sequential("auth contract", () => {
   let server: Server | undefined;
   let baseUrl = "";
 
+  beforeAll(async () => {
+    await ensureTestDatabaseAvailable();
+  });
+
   beforeEach(async () => {
     await prepareSeededTestDatabase();
-
-    const startedServer = await startServer({
-      connectionString: testDatabaseUrl,
-      nodeEnv: "test",
-      port: 0,
-      sessionSecret: testSessionSecret,
-    });
+    const startedServer = await startServer(createTestApiConfig());
 
     runtime = startedServer.runtime;
     server = startedServer.server;

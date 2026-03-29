@@ -32,6 +32,16 @@ export function createUnauthorizedError(message = "Authentication required"): Ap
   return new ApiHttpError(401, "UNAUTHORIZED", message);
 }
 
+export function createNotFoundError(message = "Resource not found"): ApiHttpError {
+  return new ApiHttpError(404, "NOT_FOUND", message);
+}
+
+export function createConflictError(
+  message = "Request conflicts with the current state",
+): ApiHttpError {
+  return new ApiHttpError(409, "CONFLICT", message);
+}
+
 export function createInternalError(): ApiHttpError {
   return new ApiHttpError(500, "INTERNAL_ERROR", "Internal server error");
 }
