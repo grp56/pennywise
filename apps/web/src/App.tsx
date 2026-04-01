@@ -8,23 +8,49 @@ import { LoginPage } from "./pages/LoginPage";
 import { TransactionFormPage } from "./pages/TransactionFormPage";
 import { TransactionsPage } from "./pages/TransactionsPage";
 
-function AppRoutes() {
+function PublicRoute({ children }: { children: React.ReactNode }) {
   const { status } = useAuth();
 
   if (status === "checking") {
     return <LoadingScreen />;
   }
 
+  return status === "authenticated" ? <Navigate to="/dashboard" replace /> : children;
+}
+
+function ProtectedRoute() {
+  const { status } = useAuth();
+
+  if (status === "checking") {
+    return <LoadingScreen />;
+  }
+
+  return status === "authenticated" ? <AppLayout /> : <Navigate to="/login" replace />;
+}
+
+function AppFallbackRoute() {
+  const { status } = useAuth();
+
+  if (status === "checking") {
+    return <LoadingScreen />;
+  }
+
+  return <Navigate to={status === "authenticated" ? "/dashboard" : "/login"} replace />;
+}
+
+function AppRoutes() {
   return (
     <Routes>
       <Route
         path="/login"
-        element={status === "authenticated" ? <Navigate to="/dashboard" replace /> : <LoginPage />}
+        element={
+          <PublicRoute>
+            <LoginPage />
+          </PublicRoute>
+        }
       />
 
-      <Route
-        element={status === "authenticated" ? <AppLayout /> : <Navigate to="/login" replace />}
-      >
+      <Route element={<ProtectedRoute />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/transactions" element={<TransactionsPage />} />
@@ -35,10 +61,7 @@ function AppRoutes() {
         />
       </Route>
 
-      <Route
-        path="*"
-        element={<Navigate to={status === "authenticated" ? "/dashboard" : "/login"} replace />}
-      />
+      <Route path="*" element={<AppFallbackRoute />} />
     </Routes>
   );
 }
