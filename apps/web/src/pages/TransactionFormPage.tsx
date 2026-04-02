@@ -307,7 +307,7 @@ export function TransactionFormPage({ mode }: TransactionFormPageProps) {
 
   if (loadError) {
     return (
-      <section className="glass-panel empty-state">
+      <section className="glass-panel empty-state" role="alert" aria-live="assertive">
         <h2 className="panel-title">Form unavailable</h2>
         <p className="muted-text">{loadError}</p>
         <Link className="button-secondary" to="/transactions">
@@ -341,40 +341,67 @@ export function TransactionFormPage({ mode }: TransactionFormPageProps) {
       <section className="glass-panel form-panel">
         <form className="form-grid" onSubmit={handleSubmit} noValidate>
           <div className="field-row">
-            <label className="field">
+            <label className="field" htmlFor="transaction-form-type">
               <span className="field__label">Type</span>
               <select
+                id="transaction-form-type"
                 className="field__control"
                 value={values.type}
+                aria-invalid={fieldErrors.type ? "true" : "false"}
+                aria-describedby={fieldErrors.type ? "transaction-form-type-error" : undefined}
                 onChange={(event) => updateField("type", event.target.value as TransactionType)}
               >
                 <option value="expense">Expense</option>
                 <option value="income">Income</option>
               </select>
-              {fieldErrors.type ? <span className="field__error">{fieldErrors.type}</span> : null}
+              {fieldErrors.type ? (
+                <span
+                  id="transaction-form-type-error"
+                  className="field__error"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {fieldErrors.type}
+                </span>
+              ) : null}
             </label>
 
-            <label className="field">
+            <label className="field" htmlFor="transaction-form-amount">
               <span className="field__label">Amount (HKD)</span>
               <input
+                id="transaction-form-amount"
                 className="field__control"
                 inputMode="decimal"
                 placeholder="0.00"
                 value={values.amount}
+                aria-invalid={fieldErrors.amount ? "true" : "false"}
+                aria-describedby={fieldErrors.amount ? "transaction-form-amount-error" : undefined}
                 onChange={(event) => updateField("amount", event.target.value)}
               />
               {fieldErrors.amount ? (
-                <span className="field__error">{fieldErrors.amount}</span>
+                <span
+                  id="transaction-form-amount-error"
+                  className="field__error"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {fieldErrors.amount}
+                </span>
               ) : null}
             </label>
           </div>
 
           <div className="field-row">
-            <label className="field">
+            <label className="field" htmlFor="transaction-form-category">
               <span className="field__label">Category</span>
               <select
+                id="transaction-form-category"
                 className="field__control"
                 value={values.categoryId}
+                aria-invalid={fieldErrors.categoryId ? "true" : "false"}
+                aria-describedby={
+                  fieldErrors.categoryId ? "transaction-form-category-error" : undefined
+                }
                 onChange={(event) => updateField("categoryId", event.target.value)}
               >
                 <option value="">Choose a category</option>
@@ -385,45 +412,78 @@ export function TransactionFormPage({ mode }: TransactionFormPageProps) {
                 ))}
               </select>
               {fieldErrors.categoryId ? (
-                <span className="field__error">{fieldErrors.categoryId}</span>
+                <span
+                  id="transaction-form-category-error"
+                  className="field__error"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {fieldErrors.categoryId}
+                </span>
               ) : null}
             </label>
 
-            <label className="field">
+            <label className="field" htmlFor="transaction-form-date">
               <span className="field__label">Transaction date</span>
               <input
+                id="transaction-form-date"
                 className="field__control"
                 type="date"
                 value={values.transactionDate}
+                aria-invalid={fieldErrors.transactionDate ? "true" : "false"}
+                aria-describedby={
+                  fieldErrors.transactionDate ? "transaction-form-date-error" : undefined
+                }
                 onChange={(event) => updateField("transactionDate", event.target.value)}
               />
               {fieldErrors.transactionDate ? (
-                <span className="field__error">{fieldErrors.transactionDate}</span>
+                <span
+                  id="transaction-form-date-error"
+                  className="field__error"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {fieldErrors.transactionDate}
+                </span>
               ) : null}
             </label>
           </div>
 
-          <label className="field">
+          <label className="field" htmlFor="transaction-form-remarks">
             <span className="field__label">Remarks</span>
             <textarea
+              id="transaction-form-remarks"
               className="field__control field__control--textarea"
               maxLength={280}
               rows={5}
               placeholder="Optional note about this entry"
               value={values.remarks}
+              aria-invalid={fieldErrors.remarks ? "true" : "false"}
+              aria-describedby={fieldErrors.remarks ? "transaction-form-remarks-error" : undefined}
               onChange={(event) => updateField("remarks", event.target.value)}
             />
             <div className="field__footer">
               <span>
                 {fieldErrors.remarks ? (
-                  <span className="field__error">{fieldErrors.remarks}</span>
+                  <span
+                    id="transaction-form-remarks-error"
+                    className="field__error"
+                    role="alert"
+                    aria-live="polite"
+                  >
+                    {fieldErrors.remarks}
+                  </span>
                 ) : null}
               </span>
               <span className="muted-text">{values.remarks.length}/280</span>
             </div>
           </label>
 
-          {submitError ? <p className="form-error-banner">{submitError}</p> : null}
+          {submitError ? (
+            <p className="form-error-banner" role="alert" aria-live="assertive">
+              {submitError}
+            </p>
+          ) : null}
 
           <div className="form-actions">
             <Link className="button-secondary" to="/transactions">

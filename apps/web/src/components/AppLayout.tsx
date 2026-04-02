@@ -73,7 +73,11 @@ export function AppLayout() {
         </nav>
 
         <div className="side-nav__footer">
-          <Link className="button-primary button-primary--full" to="/transactions/new">
+          <Link
+            className="button-primary button-primary--full"
+            to="/transactions/new"
+            data-testid="app-layout-add-transaction"
+          >
             <span className="material-symbols-outlined" aria-hidden="true">
               add
             </span>

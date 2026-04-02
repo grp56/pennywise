@@ -85,7 +85,7 @@ export function DashboardPage() {
   if (errorMessage || !state.summary) {
     return (
       <section className="content-grid">
-        <div className="glass-panel empty-state">
+        <div className="glass-panel empty-state" role="alert" aria-live="assertive">
           <h2 className="panel-title">Dashboard unavailable</h2>
           <p className="muted-text">{errorMessage ?? "Summary data is missing."}</p>
         </div>
@@ -139,7 +139,11 @@ export function DashboardPage() {
               <p className="muted-text">
                 Create the first income or expense record to populate the dashboard.
               </p>
-              <Link className="button-primary" to="/transactions/new">
+              <Link
+                className="button-primary"
+                to="/transactions/new"
+                data-testid="dashboard-empty-add-transaction"
+              >
                 Add Transaction
               </Link>
             </div>

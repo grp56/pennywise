@@ -251,7 +251,11 @@ export function TransactionsPage() {
           </p>
         </div>
 
-        <Link className="button-primary" to="/transactions/new">
+        <Link
+          className="button-primary"
+          to="/transactions/new"
+          data-testid="transactions-page-add-transaction"
+        >
           <span className="material-symbols-outlined" aria-hidden="true">
             add
           </span>
@@ -260,9 +264,10 @@ export function TransactionsPage() {
       </section>
 
       <section className="filter-grid">
-        <label className="filter-card">
+        <label className="filter-card" htmlFor="transactions-filter-type">
           <span className="field__label">Type</span>
           <select
+            id="transactions-filter-type"
             className="field__control"
             value={parsedQuery.query.type ?? ""}
             onChange={(event) =>
@@ -283,9 +288,10 @@ export function TransactionsPage() {
           </select>
         </label>
 
-        <label className="filter-card">
+        <label className="filter-card" htmlFor="transactions-filter-category">
           <span className="field__label">Category</span>
           <select
+            id="transactions-filter-category"
             className="field__control"
             value={parsedQuery.query.categoryId ?? ""}
             onChange={(event) =>
@@ -308,9 +314,10 @@ export function TransactionsPage() {
           </select>
         </label>
 
-        <label className="filter-card">
+        <label className="filter-card" htmlFor="transactions-filter-from">
           <span className="field__label">From</span>
           <input
+            id="transactions-filter-from"
             className="field__control"
             type="date"
             value={parsedQuery.query.from ?? ""}
@@ -327,9 +334,10 @@ export function TransactionsPage() {
           />
         </label>
 
-        <label className="filter-card">
+        <label className="filter-card" htmlFor="transactions-filter-to">
           <span className="field__label">To</span>
           <input
+            id="transactions-filter-to"
             className="field__control"
             type="date"
             value={parsedQuery.query.to ?? ""}
@@ -348,7 +356,7 @@ export function TransactionsPage() {
       </section>
 
       {errorMessage ? (
-        <section className="glass-panel empty-state">
+        <section className="glass-panel empty-state" role="alert" aria-live="assertive">
           <h3 className="panel-title">History unavailable</h3>
           <p className="muted-text">{errorMessage}</p>
           <button
@@ -394,7 +402,11 @@ export function TransactionsPage() {
           ) : (
             <div className="history-list">
               {state.listResponse.items.map((transaction) => (
-                <article key={transaction.id} className="history-row">
+                <article
+                  key={transaction.id}
+                  className="history-row"
+                  data-testid={`transaction-row-${transaction.id}`}
+                >
                   <div className="history-row__main">
                     <span
                       className={`pill ${
@@ -424,12 +436,17 @@ export function TransactionsPage() {
                   </p>
 
                   <div className="history-row__actions">
-                    <Link className="button-secondary" to={`/transactions/${transaction.id}/edit`}>
+                    <Link
+                      className="button-secondary"
+                      to={`/transactions/${transaction.id}/edit`}
+                      data-testid={`transaction-edit-${transaction.id}`}
+                    >
                       Edit
                     </Link>
                     <button
                       type="button"
                       className="button-danger"
+                      data-testid={`transaction-delete-${transaction.id}`}
                       onClick={() => void handleDelete(transaction.id)}
                       disabled={deletingId === transaction.id}
                     >

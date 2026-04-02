@@ -99,36 +99,60 @@ export function LoginPage() {
         </div>
 
         <form className="form-grid" onSubmit={handleSubmit} noValidate>
-          <label className="field">
+          <label className="field" htmlFor="login-username">
             <span className="field__label">Username</span>
             <input
+              id="login-username"
               className="field__control"
               name="username"
               autoComplete="username"
               value={username}
+              aria-invalid={fieldErrors.username ? "true" : "false"}
+              aria-describedby={fieldErrors.username ? "login-username-error" : undefined}
               onChange={(event) => setUsername(event.target.value)}
             />
             {fieldErrors.username ? (
-              <span className="field__error">{fieldErrors.username}</span>
+              <span
+                id="login-username-error"
+                className="field__error"
+                role="alert"
+                aria-live="polite"
+              >
+                {fieldErrors.username}
+              </span>
             ) : null}
           </label>
 
-          <label className="field">
+          <label className="field" htmlFor="login-password">
             <span className="field__label">Password</span>
             <input
+              id="login-password"
               className="field__control"
               name="password"
               type="password"
               autoComplete="current-password"
               value={password}
+              aria-invalid={fieldErrors.password ? "true" : "false"}
+              aria-describedby={fieldErrors.password ? "login-password-error" : undefined}
               onChange={(event) => setPassword(event.target.value)}
             />
             {fieldErrors.password ? (
-              <span className="field__error">{fieldErrors.password}</span>
+              <span
+                id="login-password-error"
+                className="field__error"
+                role="alert"
+                aria-live="polite"
+              >
+                {fieldErrors.password}
+              </span>
             ) : null}
           </label>
 
-          {formError ? <p className="form-error-banner">{formError}</p> : null}
+          {formError ? (
+            <p className="form-error-banner" role="alert" aria-live="assertive">
+              {formError}
+            </p>
+          ) : null}
 
           <button
             className="button-primary button-primary--full"
