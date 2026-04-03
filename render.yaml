@@ -1,0 +1,18 @@
+services:
+  - name: pennywise
+    type: web
+    runtime: node
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    preDeployCommand: pnpm db:migrate && pnpm db:seed
+    startCommand: pnpm --filter @pennywise/api start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: DEMO_USERNAME
+        sync: false
+      - key: DEMO_PASSWORD
+        sync: false
