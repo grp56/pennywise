@@ -1,5 +1,4 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 import connectPgSimple from "connect-pg-simple";
 import express, { type ErrorRequestHandler, type Request } from "express";
@@ -16,10 +15,6 @@ export interface ApiAppRuntime {
   database: ApiDatabase;
   close: () => Promise<void>;
 }
-
-const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
-const frontendDistPath = path.resolve(currentDirectory, "..", "..", "web", "dist");
-const frontendIndexPath = path.join(frontendDistPath, "index.html");
 
 function shouldServeFrontendShell(request: Request): boolean {
   if (request.method !== "GET" && request.method !== "HEAD") {
@@ -43,6 +38,7 @@ export function createApp(config: ApiConfig): ApiAppRuntime {
   const app = express();
   const PgSessionStore = connectPgSimple(session);
   const secureCookies = config.nodeEnv === "production";
+  const frontendIndexPath = path.join(config.frontendDistPath, "index.html");
 
   if (secureCookies) {
     app.set("trust proxy", 1);
@@ -70,9 +66,9 @@ export function createApp(config: ApiConfig): ApiAppRuntime {
   app.use("/api", createAuthRouter(database, secureCookies));
   app.use("/api", createBusinessRouter(database));
 
-  if (config.nodeEnv === "production") {
+  if (config.serveFrontendAssets) {
     app.use(
-      express.static(frontendDistPath, {
+      express.static(config.frontendDistPath, {
         index: false,
       }),
     );

@@ -1,3 +1,6 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import "../src/env.js";
 
 import { eq } from "drizzle-orm";
@@ -16,12 +19,17 @@ export const demoUsername = process.env.DEMO_USERNAME ?? "demo";
 export const demoPassword = process.env.DEMO_PASSWORD ?? "demo-password";
 export const testSessionSecret = process.env.SESSION_SECRET ?? "test-session-secret";
 
+const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
+const testFrontendDistPath = path.resolve(currentDirectory, "..", "..", "web", "dist");
+
 export function createTestApiConfig(overrides: Partial<ApiConfig> = {}): ApiConfig {
   return {
     connectionString: testDatabaseUrl,
+    frontendDistPath: testFrontendDistPath,
     nodeEnv: "test",
     port: 0,
     sessionSecret: testSessionSecret,
+    serveFrontendAssets: false,
     ...overrides,
   };
 }
