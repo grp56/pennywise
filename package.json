@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "pnpm --parallel --filter @pennywise/api --filter @pennywise/web run dev",
+    "start": "pnpm --filter @pennywise/api start",
     "build": "pnpm -r --if-present run build",
     "typecheck": "pnpm -r --if-present run typecheck",
     "lint": "biome check .",
@@ -15,7 +16,7 @@
     "test:e2e": "playwright test ./apps/web/e2e --pass-with-no-tests",
     "smoke:prod": "pnpm run smoke:prod:build && pnpm run smoke:prod:start",
     "smoke:prod:build": "pnpm build",
-    "smoke:prod:start": "pnpm --filter @pennywise/api start",
+    "smoke:prod:start": "pnpm start",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f postgres",
