@@ -2,15 +2,15 @@
 
 Pennywise is a personal finance tracking web app for recording income and expenses, categorizing transactions, reviewing transaction history, and monitoring the current balance.
 
-This repository is a `pnpm` monorepo with a React frontend, an Express backend, and a shared contracts package. The product requirements and technical rules currently live in `SPEC.md`. The HTML prototype folders in `dashboard_page/`, `transaction_page/`, `budget_page/`, and `analytics_page/` are visual references only.
+This repository is a `pnpm` monorepo with a React frontend, an Express backend, and a shared contracts package. The current completion artifacts for the supported delivery path live under `specs/001-core-v1-completion/`.
 
 ## Tech Stack
 
 - React 19 with Vite in `apps/web`
 - Express 5 in `apps/api`
 - Shared Zod contracts in `packages/contracts`
-- PostgreSQL for application and test databases
-- TypeScript, Vitest, and Biome across the workspace
+- PostgreSQL for application and session data
+- TypeScript, Vitest, Playwright, and Biome across the workspace
 
 ## Repository Layout
 
@@ -21,26 +21,26 @@ apps/
 packages/
   contracts/   Shared Zod schemas, types, and validation helpers
 docker/
-  ...          Local database support files
+  postgres/    Local database init scripts
+specs/
+  001-core-v1-completion/
 ```
 
-## Local Setup
-
-### Prerequisites
+## Prerequisites
 
 - Node.js `24.x`
-- `pnpm@10.6.0`
+- `pnpm@10.33.0`
 - Docker or another compatible container runtime
 
-### Environment
+## Environment
 
-Create a local `.env` file based on `.env.example`.
+Create a local `.env` file from `.env.example`.
 
 ```bash
 cp .env.example .env
 ```
 
-Current environment variables:
+Default local values:
 
 ```env
 DATABASE_URL=postgresql://pennywise:pennywise@localhost:5432/pennywise
@@ -51,118 +51,116 @@ DEMO_PASSWORD=demo-password
 PORT=3000
 ```
 
-### Install Dependencies
+`DATABASE_URL` is used by the application runtime and migration/seed commands. `TEST_DATABASE_URL` is used by the DB-backed API suites. The local Docker Compose setup initializes both databases automatically.
+
+## Local Setup
+
+Install dependencies:
 
 ```bash
 pnpm install
 ```
 
-### Start Local Database
+Start the local PostgreSQL container:
 
 ```bash
 pnpm db:up
 ```
 
-This starts the PostgreSQL container defined in `docker-compose.yml`.
-Make sure Docker is running before starting the database, and make sure host port `5432` is free.
+This starts the `postgres` service from `docker-compose.yml` on host port `5432`. The init script in `docker/postgres/init/` creates the `pennywise_test` database alongside the main `pennywise` database, so both app and test commands can use the default `.env` values.
 
-To stop the database:
+Apply migrations and seed the demo data:
+
+```bash
+pnpm db:migrate
+pnpm db:seed
+```
+
+Useful database commands:
 
 ```bash
 pnpm db:down
-```
-
-To view database logs:
-
-```bash
 pnpm db:logs
 ```
 
-### Start Development Servers
+## Local Development
+
+Run the API and web workspaces together:
 
 ```bash
 pnpm dev
 ```
 
-This runs the API and web workspaces in parallel.
+Expected local behavior:
+
+- Vite serves the web app on `http://localhost:5173`
+- Express serves the API on `http://localhost:3000`
+- The Vite dev server proxies `/api` requests to the backend
+
+Demo login defaults come from `.env.example`:
+
+- username: `demo`
+- password: `demo-password`
+
+## Verification Commands
+
+Repo-wide verification commands:
+
+```bash
+pnpm typecheck
+pnpm build
+pnpm test
+pnpm test:e2e
+```
+
+Command scope:
+
+- `pnpm typecheck` checks all workspaces
+- `pnpm build` builds contracts, API, and web assets
+- `pnpm test` runs workspace tests, then Playwright via the root script
+- `pnpm test:e2e` runs the browser suite directly
+
+DB-backed API tests require a reachable PostgreSQL instance at `TEST_DATABASE_URL`. If Docker is not running or port `5432` is unavailable, the API suites fail fast with a `TEST_DATABASE_URL` connection error.
+
+## Production-Style Local Smoke Test
+
+Use the integrated single-service path:
+
+```bash
+pnpm smoke:prod
+```
+
+Equivalent low-level commands:
+
+```bash
+pnpm build
+pnpm start
+```
+
+Expected smoke checks:
+
+- `GET /api/me` returns `401` when unauthenticated
+- `GET /login` returns the built frontend shell
+- direct browser navigation to `/dashboard` or `/transactions/:id/edit` returns the SPA shell instead of `404`
+- static assets are served by the same Express process as `/api/*`
+
+The production entrypoint serves built frontend assets only when `NODE_ENV=production`. If `apps/web/dist/index.html` is missing, startup fails with an actionable build error.
 
 ## Useful Commands
 
 ```bash
 pnpm dev
+pnpm start
 pnpm build
-pnpm test
 pnpm typecheck
 pnpm lint
 pnpm format
+pnpm test
+pnpm test:e2e
+pnpm smoke:prod
 pnpm db:up
 pnpm db:down
 pnpm db:logs
 pnpm db:migrate
 pnpm db:seed
 ```
-
-`pnpm db:migrate` applies the committed SQL migrations to `DATABASE_URL`.
-`pnpm db:seed` creates or updates the demo user and the fixed system category set.
-
-## Current Progress
-
-- The monorepo workspace is set up with `apps/web`, `apps/api`, and `packages/contracts`.
-- The shared contracts package is implemented and exports Zod schemas, TypeScript types, and pure validation helpers for auth, categories, transactions, summary data, and structured API errors.
-- The backend persistence layer is implemented with:
-  - Drizzle schema definitions for `users`, `categories`, `transactions`, and `session`
-  - committed SQL migrations
-  - repeatable seed logic for the demo user and fixed categories
-  - integration tests covering migration state, repeatable seeding, `external_ref` uniqueness, and persisted summary calculations
-- The Express API is implemented with:
-  - configuration loading
-  - PostgreSQL-backed session middleware
-  - auth routes for login, logout, and session bootstrap
-  - protected business routes for categories, transaction CRUD, and summary
-  - centralized structured error handling
-- API route-level contract tests exist for:
-  - auth success and failure cases
-  - authenticated category retrieval
-  - transaction create, list, read, update, and delete behavior
-  - validation, not-found, conflict, and summary recalculation paths
-- Unit tests exist for:
-  - positive amount validation
-  - remarks length limits
-  - valid date-only parsing
-  - category/type compatibility
-  - summary calculation
-- The React frontend is implemented with:
-  - React Router route handling for `/login`, `/dashboard`, `/transactions`, `/transactions/new`, and `/transactions/:transactionId/edit`
-  - auth bootstrap and protected-route redirects
-  - a typed API client that consumes the shared contracts package
-  - dashboard, transaction history, and shared create/edit transaction flows
-- PostgreSQL connection settings and Docker Compose support are present for local development.
-- The Vite dev server proxies `/api` requests to the Express server for local same-origin cookie-based development.
-
-## Verified Status
-
-The following checks are known to pass in the current repository state:
-
-- TypeScript typecheck for `apps/api`
-- TypeScript typecheck for `apps/web`
-- Vite production build for `apps/web`
-- Biome checks for the current `apps/api` and `apps/web` sources
-
-The repository also contains backend contract and integration test suites, but DB-backed execution still depends on a reachable PostgreSQL test database.
-
-## Notes That Still Need Documentation
-
-- Demo credentials and local login walkthrough
-- API endpoint reference and example request/response payloads
-- Frontend screen walkthroughs for dashboard, history filters, and create/edit flows
-- Local development troubleshooting guidance for PostgreSQL connectivity, Docker startup, port `5432` conflicts, and environment variables
-- Deployment instructions for Render and Neon after production setup exists
-- Integration, component, and end-to-end testing workflow after those suites are added
-- Optional mock transaction import behavior only if that feature is implemented
-
-## Current Limitations
-
-- Frontend component tests and Playwright end-to-end flows are not implemented yet.
-- The backend does not yet serve the compiled frontend assets from the same deployable service.
-- No deployment configuration is documented yet.
-- Optional mock transaction import is not implemented.
