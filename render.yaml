@@ -4,15 +4,19 @@ services:
     runtime: node
     buildCommand: pnpm install --frozen-lockfile && pnpm build
     preDeployCommand: pnpm db:migrate && pnpm db:seed
-    startCommand: pnpm --filter @pennywise/api start
+    startCommand: pnpm start
     envVars:
       - key: NODE_ENV
         value: production
+      # Generated once by Render for the deployed service.
       - key: SESSION_SECRET
         generateValue: true
+      # External Neon Postgres connection string.
       - key: DATABASE_URL
         sync: false
+      # External seeded demo username for the deployed environment.
       - key: DEMO_USERNAME
         sync: false
+      # External seeded demo password for the deployed environment.
       - key: DEMO_PASSWORD
         sync: false
