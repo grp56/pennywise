@@ -175,6 +175,15 @@ Recommended deployment smoke checks:
 - create and delete a transaction
 - refresh the browser and confirm the updated data remains visible
 
+## Supported Core V1 Scope
+
+The shipped core-v1 path is intentionally narrow:
+
+- optional mock transaction import remains deferred and is not part of the supported operator path
+- transaction history stays fixed newest-first by `transactionDate DESC, createdAt DESC`
+- no user-selectable sort controls are part of this release
+- the production runtime is one same-origin service: browser routes and `/api/*` are served by the same Express process
+
 ## Useful Commands
 
 ```bash
