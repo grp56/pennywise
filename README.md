@@ -122,6 +122,16 @@ Command scope:
 
 DB-backed API tests require a reachable PostgreSQL instance at `TEST_DATABASE_URL`. If Docker is not running or port `5432` is unavailable, the API suites fail fast with a `TEST_DATABASE_URL` connection error.
 
+## Verification Matrix
+
+| Command | Scope | Prerequisites | Expected result |
+|---|---|---|---|
+| `pnpm typecheck` | TypeScript checks across all workspaces | dependencies installed | all workspace typechecks pass |
+| `pnpm build` | contracts, API, and web production builds | dependencies installed | build completes and `apps/web/dist` is produced |
+| `pnpm test` | workspace test suites plus the root Playwright handoff | local Postgres reachable at `TEST_DATABASE_URL`; browser test prerequisites installed | backend, web, and browser suites pass in the supported local environment |
+| `pnpm test:e2e` | Playwright browser flows only | local Postgres stack available for the seeded e2e helper path | seeded login, create/edit/delete/filter, and refresh flows pass |
+| `pnpm smoke:prod` | integrated production-style runtime check | successful `pnpm build`; production env vars available; local app DB reachable at `DATABASE_URL` | one Express process serves browser routes, static assets, and `/api/*` together |
+
 ## Production-Style Local Smoke Test
 
 Use the integrated single-service path:
