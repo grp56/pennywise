@@ -9,14 +9,17 @@ export interface RenderAppOptions {
   route?: string;
 }
 
+function resolveInitialEntries(options: RenderAppOptions): string[] {
+  return options.initialEntries ?? [options.route ?? "/"];
+}
+
 export function renderApp(options: RenderAppOptions = {}) {
-  const initialEntries = options.initialEntries ?? [options.route ?? "/"];
   const user = userEvent.setup();
 
   return {
     user,
     ...render(
-      <MemoryRouter initialEntries={initialEntries}>
+      <MemoryRouter initialEntries={resolveInitialEntries(options)}>
         <App />
       </MemoryRouter>,
     ),

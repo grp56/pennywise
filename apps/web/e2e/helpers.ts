@@ -1,11 +1,15 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { AddressInfo, Server as NodeHttpServer } from "node:http";
 import react from "@vitejs/plugin-react";
 import { type InlineConfig, type ViteDevServer, createServer as createViteServer } from "vite";
 
-import { startServer, stopServer } from "../../api/tests/http-test.js";
+import {
+  type StartedTestServer,
+  closeStartedServer,
+  getServerBaseUrl,
+  startServer,
+} from "../../api/tests/http-test.js";
 import {
   createTestApiConfig,
   demoPassword,
@@ -13,16 +17,6 @@ import {
   ensureTestDatabaseAvailable,
   prepareSeededTestDatabase,
 } from "../../api/tests/test-database.js";
-
-function getServerBaseUrl(server: NodeHttpServer, label: string): string {
-  const address = server.address();
-
-  if (!address || typeof address === "string") {
-    throw new Error(`Expected the ${label} server to bind to a TCP port.`);
-  }
-
-  return `http://127.0.0.1:${address.port}`;
-}
 
 function createWebServerConfig(apiBaseUrl: string): InlineConfig {
   const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -55,6 +49,14 @@ export interface E2EStack {
   webBaseUrl: string;
 }
 
+async function closeE2EStack(
+  startedApiServer: StartedTestServer,
+  webServer: ViteDevServer,
+): Promise<void> {
+  await webServer.close();
+  await closeStartedServer(startedApiServer);
+}
+
 export async function startE2EStack(): Promise<E2EStack> {
   await ensureTestDatabaseAvailable();
   await prepareSeededTestDatabase();
@@ -68,8 +70,7 @@ export async function startE2EStack(): Promise<E2EStack> {
     webServer = await createViteServer(createWebServerConfig(apiBaseUrl));
     await webServer.listen();
   } catch (error) {
-    await stopServer(startedApiServer.server);
-    await startedApiServer.runtime.close();
+    await startedApiServer.close();
     throw error;
   }
 
@@ -77,8 +78,7 @@ export async function startE2EStack(): Promise<E2EStack> {
 
   if (!httpServer) {
     await webServer.close();
-    await stopServer(startedApiServer.server);
-    await startedApiServer.runtime.close();
+    await startedApiServer.close();
     throw new Error("Expected the Vite dev server to expose an HTTP server.");
   }
 
@@ -88,9 +88,7 @@ export async function startE2EStack(): Promise<E2EStack> {
     demoUsername,
     webBaseUrl: getServerBaseUrl(httpServer, "web"),
     close: async () => {
-      await webServer.close();
-      await stopServer(startedApiServer.server);
-      await startedApiServer.runtime.close();
+      await closeE2EStack(startedApiServer, webServer);
     },
   };
 }

@@ -1,7 +1,7 @@
 import { once } from "node:events";
 import { type Server, createServer } from "node:http";
 
-import { createApp } from "../src/app.js";
+import { type ApiAppRuntime, createApp } from "../src/app.js";
 import type { ApiConfig } from "../src/config.js";
 import { demoPassword, demoUsername } from "./test-database.js";
 
@@ -11,21 +11,45 @@ export interface JsonResponse<T> {
   status: number;
 }
 
-export async function startServer(config: ApiConfig) {
+export interface StartedTestServer {
+  baseUrl: string;
+  close: () => Promise<void>;
+  runtime: ApiAppRuntime;
+  server: Server;
+}
+
+export function getServerBaseUrl(server: Server, label: string): string {
+  const address = server.address();
+
+  if (!address || typeof address === "string") {
+    throw new Error(`Expected the ${label} server to bind to a TCP port.`);
+  }
+
+  return `http://127.0.0.1:${address.port}`;
+}
+
+export async function closeStartedServer(
+  startedServer: Pick<StartedTestServer, "runtime" | "server">,
+) {
+  await stopServer(startedServer.server);
+  await startedServer.runtime.close();
+}
+
+export async function startServer(config: ApiConfig): Promise<StartedTestServer> {
   const runtime = createApp(config);
   const server = createServer(runtime.app);
 
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
 
-  const address = server.address();
-
-  if (!address || typeof address === "string") {
-    throw new Error("Expected test server to bind to a TCP port.");
-  }
-
   return {
-    baseUrl: `http://127.0.0.1:${address.port}`,
+    baseUrl: getServerBaseUrl(server, "test"),
+    close: async () => {
+      await closeStartedServer({
+        server,
+        runtime,
+      });
+    },
     server,
     runtime,
   };

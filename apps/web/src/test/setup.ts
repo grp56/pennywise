@@ -14,12 +14,28 @@ function describeUnexpectedFetch(input: string | URL | Request): string {
   return input.url;
 }
 
+function createUnexpectedFetchError(input: string | URL | Request): Error {
+  return new Error(
+    `Unexpected fetch() call in a component test for '${describeUnexpectedFetch(input)}'. Mock the apiClient helpers instead.`,
+  );
+}
+
+function resetBrowserTestDoubles(): void {
+  confirmMock.mockReset();
+  confirmMock.mockReturnValue(true);
+
+  scrollToMock.mockReset();
+
+  fetchMock.mockReset();
+  fetchMock.mockImplementation(async (input: string | URL | Request) => {
+    throw createUnexpectedFetchError(input);
+  });
+}
+
 const confirmMock = vi.fn(() => true);
 const scrollToMock = vi.fn();
 const fetchMock = vi.fn(async (input: string | URL | Request) => {
-  throw new Error(
-    `Unexpected fetch() call in a component test for '${describeUnexpectedFetch(input)}'. Mock the apiClient helpers instead.`,
-  );
+  throw createUnexpectedFetchError(input);
 });
 
 Object.defineProperty(window, "confirm", {
@@ -41,17 +57,7 @@ Object.defineProperty(globalThis, "fetch", {
 });
 
 beforeEach(() => {
-  confirmMock.mockReset();
-  confirmMock.mockReturnValue(true);
-
-  scrollToMock.mockReset();
-
-  fetchMock.mockReset();
-  fetchMock.mockImplementation(async (input: string | URL | Request) => {
-    throw new Error(
-      `Unexpected fetch() call in a component test for '${describeUnexpectedFetch(input)}'. Mock the apiClient helpers instead.`,
-    );
-  });
+  resetBrowserTestDoubles();
 });
 
 afterEach(() => {
