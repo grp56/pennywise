@@ -2,7 +2,7 @@
 
 Pennywise is a personal finance tracking web app for recording income and expenses, categorizing transactions, reviewing transaction history, and monitoring the current balance.
 
-This repository is a `pnpm` monorepo with a React frontend, an Express backend, and a shared contracts package. The current completion artifacts for the supported delivery path live under `specs/001-core-v1-completion/`.
+This repository is a `pnpm` monorepo with a React frontend, an Express backend, and a shared contracts package.
 
 ## Tech Stack
 
@@ -22,8 +22,6 @@ packages/
   contracts/   Shared Zod schemas, types, and validation helpers
 docker/
   postgres/    Local database init scripts
-specs/
-  001-core-v1-completion/
 ```
 
 ## Prerequisites
@@ -201,21 +199,3 @@ Core-v1 completion intentionally leaves two notable decisions locked in:
 - optional mock transaction import remains deferred from the shipped implementation and documentation path
 - transaction history ordering remains fixed newest-first, with no follow-up sort controls introduced in this release
 
-## Useful Commands
-
-```bash
-pnpm dev
-pnpm start
-pnpm build
-pnpm typecheck
-pnpm lint
-pnpm format
-pnpm test
-pnpm test:e2e
-pnpm smoke:prod
-pnpm db:up
-pnpm db:down
-pnpm db:logs
-pnpm db:migrate
-pnpm db:seed
-```
