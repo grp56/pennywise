@@ -63,9 +63,7 @@ describe("TransactionFormPage", () => {
 
     renderApp({ route: "/transactions/new" });
 
-    expect(
-      await screen.findByRole("heading", { name: "Record a new ledger entry" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Create Transaction" })).toBeInTheDocument();
 
     const form = screen.getByRole("button", { name: "Create Transaction" }).closest("form");
 
@@ -104,9 +102,7 @@ describe("TransactionFormPage", () => {
       route: `/transactions/${existingTransaction.id}/edit`,
     });
 
-    expect(
-      await screen.findByRole("heading", { name: "Adjust an existing record" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Save Transaction" })).toBeInTheDocument();
     expect(mocks.getTransaction).toHaveBeenCalledWith(existingTransaction.id);
     expect(screen.getByLabelText("Type")).toHaveValue("expense");
     expect(screen.getByLabelText("Amount (HKD)")).toHaveValue("42.50");
@@ -144,9 +140,7 @@ describe("TransactionFormPage", () => {
 
     renderApp({ route: "/transactions/new" });
 
-    expect(
-      await screen.findByRole("heading", { name: "Record a new ledger entry" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByLabelText("Type")).toBeInTheDocument();
 
     const typeField = screen.getByLabelText("Type");
     const categoryField = screen.getByLabelText("Category");
@@ -199,9 +193,7 @@ describe("TransactionFormPage", () => {
     });
     const { user } = renderApp({ route: "/transactions/new" });
 
-    expect(
-      await screen.findByRole("heading", { name: "Record a new ledger entry" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Create Transaction" })).toBeInTheDocument();
 
     await fillCreateForm({
       type: "expense",

@@ -13,7 +13,7 @@ describe("LoginPage", () => {
     const mocks = mockUnauthenticatedApi();
     const { user } = renderApp({ route: "/login" });
 
-    await screen.findByRole("heading", { name: "Enter the seeded demo account" });
+    await screen.findByRole("heading", { name: "Sign in to Pennywise" });
 
     await user.click(screen.getByRole("button", { name: "Sign in" }));
 
@@ -28,7 +28,7 @@ describe("LoginPage", () => {
     });
     const { user } = renderApp({ route: "/login" });
 
-    await screen.findByRole("heading", { name: "Enter the seeded demo account" });
+    await screen.findByRole("heading", { name: "Sign in to Pennywise" });
 
     await user.type(screen.getByLabelText("Username"), "demo");
     await user.type(screen.getByLabelText("Password"), "wrong-password");
@@ -51,7 +51,7 @@ describe("LoginPage", () => {
     });
     const { user } = renderApp({ route: "/login" });
 
-    await screen.findByRole("heading", { name: "Enter the seeded demo account" });
+    await screen.findByRole("heading", { name: "Sign in to Pennywise" });
 
     await user.type(screen.getByLabelText("Username"), "demo");
     await user.type(screen.getByLabelText("Password"), "demo-password");

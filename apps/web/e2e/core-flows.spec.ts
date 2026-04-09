@@ -20,7 +20,7 @@ async function createTransaction(
   },
 ) {
   await page.goto(`${stackState.webBaseUrl}/transactions/new`);
-  await expect(page.getByRole("heading", { name: "Record a new ledger entry" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Add a transaction" })).toBeVisible();
 
   await page.getByLabel("Type").selectOption(input.type);
   await page.getByLabel("Amount (HKD)").fill(input.amount);
@@ -51,17 +51,14 @@ test.describe("core seeded flows", () => {
     const editedExpenseRemarks = "Playwright edited food expense";
 
     await page.goto(`${stack.webBaseUrl}/login`);
-    await expect(
-      page.getByRole("heading", { name: "Enter the seeded demo account" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Sign in to Pennywise" })).toBeVisible();
 
     await page.getByLabel("Username").fill(stack.demoUsername);
     await page.getByLabel("Password").fill(stack.demoPassword);
     await page.getByRole("button", { name: "Sign in" }).click();
 
     await page.waitForURL("**/dashboard");
-    await expect(page.getByText(stack.demoUsername)).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Keep the ledger current" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Your balance at a glance" })).toBeVisible();
 
     await createTransaction(page, stack, {
       type: "income",
@@ -87,7 +84,7 @@ test.describe("core seeded flows", () => {
     await expenseRow.getByRole("link", { name: "Edit" }).click();
 
     await page.waitForURL("**/transactions/*/edit");
-    await expect(page.getByRole("heading", { name: "Adjust an existing record" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Edit transaction" })).toBeVisible();
     await page.getByLabel("Amount (HKD)").fill("65.43");
     await page.getByPlaceholder("Optional note about this entry").fill(editedExpenseRemarks);
     await page.getByRole("button", { name: "Save Transaction" }).click();
@@ -104,7 +101,7 @@ test.describe("core seeded flows", () => {
 
     await page.reload();
     await expect(page).toHaveURL(/type=expense/);
-    await expect(page.getByText(stack.demoUsername)).toBeVisible();
+    await expect(page.getByRole("heading", { name: "All transactions" })).toBeVisible();
     await expect(transactionRow(page, editedExpenseRemarks)).toBeVisible();
 
     page.once("dialog", (dialog) => dialog.accept());
@@ -116,11 +113,12 @@ test.describe("core seeded flows", () => {
 
     await page.getByRole("link", { name: "Transactions" }).click();
     await page.waitForURL("**/transactions");
+    await expect(page.getByRole("heading", { name: "All transactions" })).toBeVisible();
     await expect(transactionRow(page, incomeRemarks)).toBeVisible();
     await expect(transactionRow(page, editedExpenseRemarks)).toHaveCount(0);
 
     await page.reload();
-    await expect(page.getByText(stack.demoUsername)).toBeVisible();
+    await expect(page.getByRole("heading", { name: "All transactions" })).toBeVisible();
     await expect(transactionRow(page, incomeRemarks)).toBeVisible();
     await expect(transactionRow(page, editedExpenseRemarks)).toHaveCount(0);
   });

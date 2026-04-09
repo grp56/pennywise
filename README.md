@@ -4,6 +4,12 @@ Pennywise is a personal finance tracking web app for recording income and expens
 
 This repository is a `pnpm` monorepo with a React frontend, an Express backend, and a shared contracts package.
 
+## Architecture and UX Docs
+
+- [System Architecture](/home/raner/pennywise/specs/001-core-v1-completion/system-architecture.md)
+- [ER Diagram](/home/raner/pennywise/specs/001-core-v1-completion/er-diagram.md)
+- [Key Screen Wireframes](/home/raner/pennywise/specs/001-core-v1-completion/key-screen-wireframes.md)
+
 ## Tech Stack
 
 - React 19 with Vite in `apps/web`
@@ -198,4 +204,3 @@ Core-v1 completion intentionally leaves two notable decisions locked in:
 
 - optional mock transaction import remains deferred from the shipped implementation and documentation path
 - transaction history ordering remains fixed newest-first, with no follow-up sort controls introduced in this release
-

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useAuth } from "../auth";
+import { PageHeader } from "../components/PageHeader";
 import { apiClient, isApiClientError } from "../lib/api";
 import { formatCurrencyFromCents, formatDateLabel } from "../lib/format";
 
@@ -19,6 +20,14 @@ export function DashboardPage() {
   });
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const header = (
+    <PageHeader
+      eyebrow="Dashboard"
+      title="Your balance at a glance"
+      description="See your current balance, recent activity, and quick actions in one place."
+    />
+  );
 
   useEffect(() => {
     let ignore = false;
@@ -72,36 +81,46 @@ export function DashboardPage() {
 
   if (loading) {
     return (
-      <section className="hero-grid">
-        <div className="hero-balance glass-panel">
-          <p className="section-eyebrow">Total Liquidity</p>
-          <h2 className="hero-balance__value">Loading...</h2>
-          <p className="muted-text">Retrieving summary and recent activity.</p>
-        </div>
-      </section>
+      <div className="content-grid">
+        {header}
+
+        <section className="hero-grid">
+          <div className="hero-balance">
+            <p className="section-eyebrow">Current balance</p>
+            <h2 className="hero-balance__value">Loading...</h2>
+            <p className="muted-text">Loading your balance and recent activity.</p>
+          </div>
+        </section>
+      </div>
     );
   }
 
   if (errorMessage || !state.summary) {
     return (
-      <section className="content-grid">
-        <div className="glass-panel empty-state" role="alert" aria-live="assertive">
-          <h2 className="panel-title">Dashboard unavailable</h2>
-          <p className="muted-text">{errorMessage ?? "Summary data is missing."}</p>
-        </div>
-      </section>
+      <div className="content-grid">
+        {header}
+
+        <section className="content-grid">
+          <div className="glass-panel empty-state" role="alert" aria-live="assertive">
+            <h2 className="panel-title">Dashboard unavailable</h2>
+            <p className="muted-text">{errorMessage ?? "Summary data is missing."}</p>
+          </div>
+        </section>
+      </div>
     );
   }
 
   return (
     <div className="content-grid">
+      {header}
+
       <section className="hero-grid">
-        <div className="hero-balance glass-panel">
-          <p className="section-eyebrow">Total Liquidity</p>
+        <div className="hero-balance">
+          <p className="section-eyebrow">Current balance</p>
           <h2 className="hero-balance__value">
             {formatCurrencyFromCents(state.summary.balanceCents)}
           </h2>
-          <p className="muted-text">Current balance derived from all persisted transactions.</p>
+          <p className="muted-text">Based on your recorded income and expenses.</p>
         </div>
 
         <div className="summary-cards">
@@ -126,7 +145,7 @@ export function DashboardPage() {
           <div className="panel-card__header">
             <div>
               <p className="section-eyebrow">Recent Activity</p>
-              <h3 className="panel-title">Last 5 entries</h3>
+              <h3 className="panel-title">Recent transactions</h3>
             </div>
             <Link className="inline-link" to="/transactions">
               View all
@@ -136,9 +155,7 @@ export function DashboardPage() {
           {state.recentTransactions.length === 0 ? (
             <div className="empty-state">
               <p className="panel-title">No transactions yet</p>
-              <p className="muted-text">
-                Create the first income or expense record to populate the dashboard.
-              </p>
+              <p className="muted-text">Add your first income or expense to get started.</p>
               <Link
                 className="button-primary"
                 to="/transactions/new"
@@ -178,7 +195,7 @@ export function DashboardPage() {
                     }
                   >
                     {transaction.type === "income" ? "+" : "-"}
-                    {formatCurrencyFromCents(transaction.amountCents).replace("HK$", "HK$")}
+                    {formatCurrencyFromCents(transaction.amountCents)}
                   </p>
                 </Link>
               ))}
@@ -188,17 +205,16 @@ export function DashboardPage() {
 
         <article className="glass-panel insight-card">
           <p className="section-eyebrow">Next Step</p>
-          <h3 className="panel-title">Keep the ledger current</h3>
+          <h3 className="panel-title">Add your next transaction</h3>
           <p className="muted-text">
-            Transaction history, edit flow, and filters all rely on the same backend contracts as
-            the dashboard summary.
+            Record income or expenses, then review the full history anytime.
           </p>
           <div className="insight-card__actions">
             <Link className="button-primary" to="/transactions/new">
-              Record Entry
+              Add Transaction
             </Link>
             <Link className="button-secondary" to="/transactions">
-              Open History
+              View History
             </Link>
           </div>
         </article>
