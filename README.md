@@ -194,6 +194,13 @@ The shipped core-v1 path is intentionally narrow:
 - no user-selectable sort controls are part of this release
 - the production runtime is one same-origin service: browser routes and `/api/*` are served by the same Express process
 
+## Completion Notes
+
+Core-v1 completion intentionally leaves two notable decisions locked in:
+
+- optional mock transaction import remains deferred from the shipped implementation and documentation path
+- transaction history ordering remains fixed newest-first, with no follow-up sort controls introduced in this release
+
 ## Useful Commands
 
 ```bash
