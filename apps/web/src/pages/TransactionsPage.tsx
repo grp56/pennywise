@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { useAuth } from "../auth";
+import { PageHeader } from "../components/PageHeader";
 import { apiClient, isApiClientError } from "../lib/api";
 import { formatCurrencyFromCents, formatDateLabel } from "../lib/format";
 
@@ -242,26 +243,23 @@ export function TransactionsPage() {
 
   return (
     <div className="content-grid">
-      <section className="page-header">
-        <div>
-          <p className="section-eyebrow">Transaction History</p>
-          <h2 className="panel-title panel-title--hero">Income and expense flow</h2>
-          <p className="muted-text">
-            Filter by type, category, and date range while keeping the API query in the URL.
-          </p>
-        </div>
-
-        <Link
-          className="button-primary"
-          to="/transactions/new"
-          data-testid="transactions-page-add-transaction"
-        >
-          <span className="material-symbols-outlined" aria-hidden="true">
-            add
-          </span>
-          <span>Add Transaction</span>
-        </Link>
-      </section>
+      <PageHeader
+        eyebrow="Transaction History"
+        title="All transactions"
+        description="Filter by date, type, or category to find what you need."
+        actions={
+          <Link
+            className="button-primary"
+            to="/transactions/new"
+            data-testid="transactions-page-add-transaction"
+          >
+            <span className="material-symbols-outlined" aria-hidden="true">
+              add
+            </span>
+            <span>Add Transaction</span>
+          </Link>
+        }
+      />
 
       <section className="filter-grid">
         <label className="filter-card" htmlFor="transactions-filter-type">
@@ -372,7 +370,7 @@ export function TransactionsPage() {
       {loading ? (
         <section className="glass-panel empty-state">
           <h3 className="panel-title">Loading transactions</h3>
-          <p className="muted-text">Fetching the latest persisted records.</p>
+          <p className="muted-text">Loading your transactions.</p>
         </section>
       ) : null}
 
@@ -395,9 +393,7 @@ export function TransactionsPage() {
           {state.listResponse.items.length === 0 ? (
             <div className="empty-state">
               <p className="panel-title">Nothing matches the current filters</p>
-              <p className="muted-text">
-                Clear one or more filters or create a new transaction to populate the history.
-              </p>
+              <p className="muted-text">Clear a filter or add a new transaction to see results.</p>
             </div>
           ) : (
             <div className="history-list">

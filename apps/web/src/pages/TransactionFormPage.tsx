@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { useAuth } from "../auth";
+import { PageHeader } from "../components/PageHeader";
 import { apiClient, getValidationFieldErrors, isApiClientError } from "../lib/api";
 import {
   formatAmountInputFromCents,
@@ -139,6 +140,22 @@ export function TransactionFormPage({ mode }: TransactionFormPageProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const header = (
+    <PageHeader
+      eyebrow={mode === "edit" ? "Edit Transaction" : "New Transaction"}
+      title={mode === "edit" ? "Edit transaction" : "Add a transaction"}
+      description={
+        mode === "edit"
+          ? "Update the details below and save your changes."
+          : "Enter the details below and save them to your history."
+      }
+      actions={
+        <Link className="button-secondary" to="/transactions">
+          Back to history
+        </Link>
+      }
+    />
+  );
 
   useEffect(() => {
     let ignore = false;
@@ -298,45 +315,36 @@ export function TransactionFormPage({ mode }: TransactionFormPageProps) {
 
   if (loading) {
     return (
-      <section className="glass-panel empty-state">
-        <h2 className="panel-title">Loading transaction form</h2>
-        <p className="muted-text">Retrieving categories and existing values.</p>
-      </section>
+      <div className="content-grid">
+        {header}
+
+        <section className="glass-panel empty-state">
+          <h2 className="panel-title">Loading transaction form</h2>
+          <p className="muted-text">Loading transaction form.</p>
+        </section>
+      </div>
     );
   }
 
   if (loadError) {
     return (
-      <section className="glass-panel empty-state" role="alert" aria-live="assertive">
-        <h2 className="panel-title">Form unavailable</h2>
-        <p className="muted-text">{loadError}</p>
-        <Link className="button-secondary" to="/transactions">
-          Back to history
-        </Link>
-      </section>
+      <div className="content-grid">
+        {header}
+
+        <section className="glass-panel empty-state" role="alert" aria-live="assertive">
+          <h2 className="panel-title">Form unavailable</h2>
+          <p className="muted-text">{loadError}</p>
+          <Link className="button-secondary" to="/transactions">
+            Back to history
+          </Link>
+        </section>
+      </div>
     );
   }
 
   return (
     <div className="content-grid">
-      <section className="page-header">
-        <div>
-          <p className="section-eyebrow">
-            {mode === "edit" ? "Edit Transaction" : "New Transaction"}
-          </p>
-          <h2 className="panel-title panel-title--hero">
-            {mode === "edit" ? "Adjust an existing record" : "Record a new ledger entry"}
-          </h2>
-          <p className="muted-text">
-            Amounts are entered in HKD and converted to the contract’s `amountCents` field on
-            submit.
-          </p>
-        </div>
-
-        <Link className="button-secondary" to="/transactions">
-          Back to history
-        </Link>
-      </section>
+      {header}
 
       <section className="glass-panel form-panel">
         <form className="form-grid" onSubmit={handleSubmit} noValidate>

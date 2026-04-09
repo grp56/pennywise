@@ -23,14 +23,15 @@ const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const testFrontendDistPath = path.resolve(currentDirectory, "..", "..", "web", "dist");
 
 export function createTestApiConfig(overrides: Partial<ApiConfig> = {}): ApiConfig {
+  const nodeEnv = overrides.nodeEnv ?? "test";
+
   return {
-    connectionString: testDatabaseUrl,
-    frontendDistPath: testFrontendDistPath,
-    nodeEnv: "test",
-    port: 0,
-    sessionSecret: testSessionSecret,
-    serveFrontendAssets: false,
-    ...overrides,
+    connectionString: overrides.connectionString ?? testDatabaseUrl,
+    frontendDistPath: overrides.frontendDistPath ?? testFrontendDistPath,
+    nodeEnv,
+    port: overrides.port ?? 0,
+    sessionSecret: overrides.sessionSecret ?? testSessionSecret,
+    serveFrontendAssets: overrides.serveFrontendAssets ?? nodeEnv === "production",
   };
 }
 

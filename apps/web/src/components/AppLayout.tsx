@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate, useOutletContext } from "react-router-dom";
 
 import { useAuth } from "../auth";
 
@@ -16,9 +16,17 @@ const navigationItems = [
   },
 ];
 
+interface AppLayoutOutletContext {
+  openMobileNav: () => void;
+}
+
+export function useAppLayoutContext() {
+  return useOutletContext<AppLayoutOutletContext>();
+}
+
 export function AppLayout() {
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -53,7 +61,7 @@ export function AppLayout() {
       <aside className={`side-nav ${mobileNavOpen ? "is-open" : ""}`}>
         <div className="brand-block">
           <p className="brand-mark">Pennywise</p>
-          <p className="brand-caption">Private Vault</p>
+          <p className="brand-caption">Personal finance</p>
         </div>
 
         <nav className="nav-stack" aria-label="Primary navigation">
@@ -99,37 +107,12 @@ export function AppLayout() {
       </aside>
 
       <div className="app-content">
-        <header className="top-bar">
-          <div className="top-bar__leading">
-            <button
-              type="button"
-              className="icon-button mobile-nav-toggle"
-              aria-label="Open navigation"
-              onClick={() => setMobileNavOpen(true)}
-            >
-              <span className="material-symbols-outlined" aria-hidden="true">
-                menu
-              </span>
-            </button>
-
-            <div>
-              <p className="section-eyebrow">Personal Finance Tracking</p>
-              <h1 className="section-title">Pennywise</h1>
-            </div>
-          </div>
-
-          <div className="top-bar__account">
-            <div className="account-chip">
-              <span className="material-symbols-outlined" aria-hidden="true">
-                lock
-              </span>
-              <span>{user?.username ?? "Demo user"}</span>
-            </div>
-          </div>
-        </header>
-
         <main className="page-shell">
-          <Outlet />
+          <Outlet
+            context={{
+              openMobileNav: () => setMobileNavOpen(true),
+            }}
+          />
         </main>
       </div>
     </div>

@@ -81,21 +81,18 @@ export function LoginPage() {
   return (
     <main className="login-screen">
       <section className="login-hero">
-        <p className="section-eyebrow">Architectural Ledger</p>
-        <h1 className="login-title">A calm ledger for income, expenses, and daily balance.</h1>
+        <p className="section-eyebrow">Personal finance</p>
+        <h1 className="login-title">Track your balance in one clear view.</h1>
         <p className="login-copy">
-          Pennywise keeps the first release intentionally narrow: one demo account, one secure
-          session, and a clear route from transaction entry to current balance.
+          Record income and expenses, review recent activity, and stay on top of everyday spending.
         </p>
       </section>
 
       <section className="login-card glass-panel">
         <div className="login-card__header">
           <p className="section-eyebrow">Sign In</p>
-          <h2 className="panel-title">Enter the seeded demo account</h2>
-          <p className="muted-text">
-            The backend validates credentials and establishes the session cookie.
-          </p>
+          <h2 className="panel-title">Sign in to Pennywise</h2>
+          <p className="muted-text">Enter your username and password to continue.</p>
         </div>
 
         <form className="form-grid" onSubmit={handleSubmit} noValidate>
